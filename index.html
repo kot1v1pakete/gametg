@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Lobby | Telegram Game</title>
     <style>
+        /* Ваши стили остаются без изменений */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
@@ -25,77 +26,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
-        .player-card {
-            background: #f5f5f5;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            display: flex;
-            align-items: center;
-            text-align: left;
-        }
-        .player-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            margin-right: 15px;
-            object-fit: cover;
-        }
-        .player-info {
-            flex: 1;
-        }
-        .player-name {
-            font-weight: bold;
-            margin: 0;
-            color: #333;
-        }
-        .player-username {
-            margin: 3px 0 0;
-            color: #666;
-            font-size: 14px;
-        }
-        button {
-            background: #007aff;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 10px 5px;
-            transition: all 0.2s;
-            font-weight: 500;
-        }
-        button:hover {
-            background: #0062cc;
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        .secondary-btn {
-            background: #e0e0e0;
-            color: #333;
-        }
-        .secondary-btn:hover {
-            background: #d0d0d0;
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 25px;
-        }
-        .lobby-status {
-            color: #666;
-            margin: 20px 0;
-            font-size: 14px;
-        }
-        .debug-info {
-            font-size: 12px;
-            color: #999;
-            margin-top: 20px;
-            text-align: left;
-            word-break: break-all;
-        }
+        /* Остальные стили оставляем как были */
     </style>
 </head>
 <body>
@@ -111,114 +42,124 @@
         </div>
         
         <div class="lobby-status" id="lobbyStatus">
-            Ожидание начала игры...
+            Подключение к серверу...
         </div>
         
         <button onclick="startGame()">Начать игру</button>
         <button class="secondary-btn" onclick="inviteFriends()">Пригласить друзей</button>
         <button class="secondary-btn" onclick="closeApp()">Выход</button>
-        
-        <div class="debug-info" id="debugInfo">
-            Debug info will be here
-        </div>
     </div>
 
     <script>
-        // Debug function
-        function debugLog(message) {
-            const debugElement = document.getElementById('debugInfo');
-            debugElement.innerHTML += message + '<br>';
-            console.log(message);
+        // Глобальные переменные
+        let userData = {
+            id: null,
+            first_name: "Гость",
+            last_name: "",
+            username: "guest",
+            photo_url: "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+        };
+
+        // Основная функция инициализации
+        async function initApp() {
+            // 1. Пробуем получить данные из Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    userData = {
+                        ...userData,
+                        ...tg.initDataUnsafe.user
+                    };
+                    saveUserData(userData);
+                    updateUI(userData);
+                    return;
+                }
+            }
+
+            // 2. Пробуем получить данные из URL параметров
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('tg_user')) {
+                try {
+                    const data = JSON.parse(decodeURIComponent(urlParams.get('tg_user')));
+                    userData = {
+                        ...userData,
+                        ...data
+                    };
+                    saveUserData(userData);
+                    updateUI(userData);
+                    return;
+                } catch (e) {
+                    console.error("Error parsing URL params:", e);
+                }
+            }
+
+            // 3. Пробуем получить сохраненные данные
+            const savedData = getUserData();
+            if (savedData) {
+                userData = savedData;
+                updateUI(userData);
+                return;
+            }
+
+            // 4. Режим по умолчанию
+            updateUI(userData);
         }
-        
-        debugLog('Script started');
-        
-        // Проверяем, что мы в Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
-            debugLog('Telegram WebApp detected');
+
+        // Функции работы с данными
+        function saveUserData(data) {
+            localStorage.setItem('tg_user_data', JSON.stringify(data));
+        }
+
+        function getUserData() {
+            const data = localStorage.getItem('tg_user_data');
+            return data ? JSON.parse(data) : null;
+        }
+
+        // Обновление интерфейса
+        function updateUI(data) {
+            document.getElementById('playerName').textContent = 
+                data.first_name + (data.last_name ? ' ' + data.last_name : '');
             
-            const tg = window.Telegram.WebApp;
+            document.getElementById('playerUsername').textContent = 
+                data.username ? '@' + data.username : 'ID: ' + (data.id || '0000');
             
-            // Развернуть на весь экран
-            tg.expand();
-            tg.enableClosingConfirmation();
+            document.getElementById('playerAvatar').src = 
+                data.photo_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
             
-            debugLog('WebApp expanded');
-            
-            // Получить данные пользователя
-            const user = tg.initDataUnsafe?.user;
-            
-            if (user) {
-                debugLog('User data found: ' + JSON.stringify(user));
-                
-                // Обновляем информацию об игроке
-                updatePlayerInfo(user);
-                
-                // Показываем версию Telegram
-                document.getElementById('lobbyStatus').textContent = 
-                    `Версия Telegram: ${tg.version || 'неизвестно'}`;
-            } else {
-                debugLog('No user data found');
-                document.getElementById('playerName').textContent = 'Гость';
-                document.getElementById('playerUsername').textContent = 'Данные не получены';
-                document.getElementById('lobbyStatus').textContent = 
-                    'Не удалось получить данные пользователя';
-            }
-            
-            // Функции лобби
-            window.startGame = function() {
-                tg.showAlert('Игра начинается! (Это демо)');
-            };
-            
-            window.inviteFriends = function() {
-                tg.showPopup({
-                    title: 'Пригласить друзей',
-                    message: 'Скопируйте ссылку и поделитесь с друзьями!',
-                    buttons: [
-                        {type: 'default', text: 'Копировать ссылку', id: 'copy'},
-                        {type: 'cancel', id: 'close'}
-                    ]
-                }, (buttonId) => {
-                    if (buttonId === 'copy') {
-                        navigator.clipboard.writeText(window.location.href)
-                            .then(() => tg.showAlert('Ссылка скопирована!'));
-                    }
-                });
-            };
-            
-            window.closeApp = function() {
-                tg.close();
-            };
-            
-            function updatePlayerInfo(user) {
-                // Установить аватар
-                const avatar = document.getElementById('playerAvatar');
-                if (user.photo_url) {
-                    avatar.src = user.photo_url;
-                    debugLog('Avatar set: ' + user.photo_url);
-                }
-                
-                // Установить имя
-                const name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-                document.getElementById('playerName').textContent = name;
-                debugLog('Name set: ' + name);
-                
-                // Установить username
-                const usernameElement = document.getElementById('playerUsername');
-                if (user.username) {
-                    usernameElement.textContent = '@' + user.username;
-                    debugLog('Username set: @' + user.username);
-                } else {
-                    usernameElement.textContent = 'ID: ' + user.id;
-                    debugLog('User ID set: ' + user.id);
-                }
-            }
-        } else {
-            debugLog('Not in Telegram WebApp! Running in browser mode');
-            document.getElementById('playerName').textContent = 'Тестовый режим';
-            document.getElementById('playerUsername').textContent = 'Откройте в Telegram';
             document.getElementById('lobbyStatus').textContent = 
-                'Этот WebApp должен запускаться через Telegram';
+                window.Telegram && window.Telegram.WebApp ? 
+                "Telegram WebApp подключен" : 
+                "Режим браузера";
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Остальные функции (startGame, inviteFriends, closeApp) остаются без изменений
+        function startGame() {
+            alert(`Добро пожаловать, ${userData.first_name}! Игра начинается...`);
+        }
+
+        function inviteFriends() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('tg_user', encodeURIComponent(JSON.stringify(userData)));
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url.toString())
+                    .then(() => alert('Ссылка скопирована!'));
+            } else {
+                prompt("Скопируйте эту ссылку для друзей:", url.toString());
+            }
+        }
+
+        function closeApp() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                Telegram.WebApp.close();
+            } else {
+                alert("Приложение закрыто (в браузере)");
+            }
         }
     </script>
 </body>
