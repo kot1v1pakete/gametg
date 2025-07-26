@@ -3,73 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игра в Telegram</title>
+    <title>Game Lobby | Telegram Game</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
             text-align: center;
-            background: #f0f2f5;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         #game {
-            max-width: 100%;
+            width: 90%;
+            max-width: 400px;
             margin: 0 auto;
             background: white;
-            padding: 20px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .player-card {
+            background: #f5f5f5;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            text-align: left;
+        }
+        .player-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+        .player-info {
+            flex: 1;
+        }
+        .player-name {
+            font-weight: bold;
+            margin: 0;
+            color: #333;
+        }
+        .player-username {
+            margin: 3px 0 0;
+            color: #666;
+            font-size: 14px;
         }
         button {
             background: #007aff;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 25px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            margin: 10px;
+            margin: 10px 5px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        button:hover {
+            background: #0062cc;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .secondary-btn {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .secondary-btn:hover {
+            background: #d0d0d0;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 25px;
+        }
+        .lobby-status {
+            color: #666;
+            margin: 20px 0;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div id="game">
-        <h1>🕹️ Моя игра</h1>
-        <p id="username">Привет, игрок!</p>
-        <button onclick="startGame()">Старт</button>
-        <button onclick="closeApp()">Выход</button>
-        <div id="score">Счет: 0</div>
+        <h1>🎮 Игровое лобби</h1>
+        
+        <div class="player-card" id="playerCard">
+            <img src="" alt="Avatar" class="player-avatar" id="playerAvatar">
+            <div class="player-info">
+                <h3 class="player-name" id="playerName">Загрузка...</h3>
+                <p class="player-username" id="playerUsername">@username</p>
+            </div>
+        </div>
+        
+        <div class="lobby-status" id="lobbyStatus">
+            Ожидание начала игры...
+        </div>
+        
+        <button onclick="startGame()">Начать игру</button>
+        <button class="secondary-btn" onclick="inviteFriends()">Пригласить друзей</button>
+        <button class="secondary-btn" onclick="closeApp()">Выход</button>
     </div>
 
     <script>
         // Инициализация Telegram WebApp
         const tg = window.Telegram.WebApp;
-
+        
         // Развернуть на весь экран
         tg.expand();
-
+        tg.enableClosingConfirmation(); // Запрос подтверждения при закрытии
+        
         // Получить данные пользователя
         const user = tg.initDataUnsafe.user;
-        if (user) {
-            document.getElementById('username').textContent = `Привет, ${user.first_name}!`;
+        
+        // Обновить информацию об игроке
+        function updatePlayerInfo() {
+            if (user) {
+                // Установить аватар
+                const avatar = document.getElementById('playerAvatar');
+                if (user.photo_url) {
+                    avatar.src = user.photo_url;
+                } else {
+                    avatar.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // Заглушка
+                }
+                
+                // Установить имя
+                document.getElementById('playerName').textContent = 
+                    user.first_name + (user.last_name ? ' ' + user.last_name : '');
+                
+                // Установить username
+                const usernameElement = document.getElementById('playerUsername');
+                if (user.username) {
+                    usernameElement.textContent = '@' + user.username;
+                } else {
+                    usernameElement.textContent = 'ID: ' + user.id;
+                }
+                
+                // Можно добавить больше информации о пользователе
+            } else {
+                document.getElementById('playerName').textContent = 'Гость';
+                document.getElementById('playerUsername').textContent = 'Войдите в Telegram';
+            }
         }
-
-        // Логика игры
-        let score = 0;
+        
+        // Функции лобби
         function startGame() {
-            score += 1;
-            document.getElementById('score').textContent = `Счет: ${score}`;
+            document.getElementById('lobbyStatus').textContent = 'Игра начинается...';
+            // Здесь можно добавить переход к самой игре
+            setTimeout(() => {
+                alert('Игра началась! (Это демо)');
+                document.getElementById('lobbyStatus').textContent = 'Ожидание начала игры...';
+            }, 1000);
         }
-
-        // Закрыть WebApp
+        
+        function inviteFriends() {
+            tg.showPopup({
+                title: 'Пригласить друзей',
+                message: 'Скопируйте ссылку и поделитесь с друзьями!',
+                buttons: [
+                    {type: 'default', text: 'Копировать ссылку', id: 'copy'},
+                    {type: 'cancel', id: 'close'}
+                ]
+            }, (buttonId) => {
+                if (buttonId === 'copy') {
+                    navigator.clipboard.writeText(window.location.href)
+                        .then(() => tg.showAlert('Ссылка скопирована!'));
+                }
+            });
+        }
+        
         function closeApp() {
             tg.close();
         }
-
-        // Отправить данные боту (опционально)
-        function sendData() {
-            tg.sendData(JSON.stringify({ score: score }));
-        }
+        
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePlayerInfo();
+            
+            // Можно добавить проверку платформы
+            if (tg.platform === 'tdesktop' || tg.platform === 'macos') {
+                document.getElementById('lobbyStatus').textContent += ' (Desktop версия)';
+            }
+        });
     </script>
 </body>
 </html>
