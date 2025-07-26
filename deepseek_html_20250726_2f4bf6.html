@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра в Telegram</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        #game {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>🕹️ Моя игра</h1>
+        <p id="username">Привет, игрок!</p>
+        <button onclick="startGame()">Старт</button>
+        <button onclick="closeApp()">Выход</button>
+        <div id="score">Счет: 0</div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+
+        // Развернуть на весь экран
+        tg.expand();
+
+        // Получить данные пользователя
+        const user = tg.initDataUnsafe.user;
+        if (user) {
+            document.getElementById('username').textContent = `Привет, ${user.first_name}!`;
+        }
+
+        // Логика игры
+        let score = 0;
+        function startGame() {
+            score += 1;
+            document.getElementById('score').textContent = `Счет: ${score}`;
+        }
+
+        // Закрыть WebApp
+        function closeApp() {
+            tg.close();
+        }
+
+        // Отправить данные боту (опционально)
+        function sendData() {
+            tg.sendData(JSON.stringify({ score: score }));
+        }
+    </script>
+</body>
+</html>
