@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Game | Telegram</title>
+    <title>Casino Roulette | Telegram</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -31,7 +31,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
@@ -82,37 +82,59 @@
         .roulette-container {
             position: relative;
             width: 100%;
-            height: 200px;
-            margin: 30px 0;
-            perspective: 1000px;
+            height: 300px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .roulette-wheel {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
             position: relative;
-            transform-style: preserve-3d;
-            animation: spin 10s linear infinite;
+            overflow: hidden;
+            box-shadow: 0 0 0 8px #d9a441, 0 0 0 10px #1a1a1a, 0 0 20px rgba(0,0,0,0.5);
+            background: #005e00;
         }
-        .wheel-section {
+        .wheel-center {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            left: 50px;
+            width: 60px;
+            height: 60px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            border: 3px solid #ccc;
+        }
+        .wheel-number {
+            position: absolute;
+            width: 0;
+            height: 0;
+            left: 50%;
             top: 0;
-            transform-origin: bottom center;
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transform-origin: 50% 140px;
+            text-align: center;
             font-weight: bold;
+            font-size: 14px;
             color: white;
-            box-sizing: border-box;
+            line-height: 24px;
+            z-index: 2;
+        }
+        .wheel-number span {
+            position: absolute;
+            width: 40px;
+            height: 24px;
+            left: -20px;
+            top: 10px;
+            transform: rotate(90deg);
         }
         .ball {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 16px;
+            height: 16px;
             background: white;
             border-radius: 50%;
             top: 50%;
@@ -120,12 +142,25 @@
             transform: translate(-50%, -50%);
             z-index: 10;
             box-shadow: 0 0 10px rgba(255,255,255,0.8);
+            transition: all 0.1s linear;
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #e74c3c;
+            z-index: 20;
         }
         .controls {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin-top: 30px;
+            margin-top: 20px;
         }
         button {
             background: linear-gradient(135deg, #27ae60, #2ecc71);
@@ -172,10 +207,6 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        @keyframes spin {
-            0% { transform: rotateX(0) rotateZ(0); }
-            100% { transform: rotateX(360deg) rotateZ(720deg); }
-        }
         .result {
             margin-top: 20px;
             font-size: 18px;
@@ -203,8 +234,11 @@
         </div>
         
         <div class="roulette-container">
-            <div class="roulette-wheel" id="rouletteWheel"></div>
-            <div class="ball"></div>
+            <div class="roulette-wheel" id="rouletteWheel">
+                <div class="wheel-center"></div>
+                <div class="wheel-pointer"></div>
+            </div>
+            <div class="ball" id="ball"></div>
         </div>
         
         <div class="bet-controls">
@@ -235,7 +269,10 @@
         let coins = 1000;
         let currentBet = 100;
         let isSpinning = false;
-        const rouletteNumbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+        const rouletteNumbers = [
+            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 
+            11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+        ];
         const colors = [
             'green', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
             'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
@@ -247,19 +284,21 @@
         // Инициализация рулетки
         function initRoulette() {
             const wheel = document.getElementById('rouletteWheel');
-            wheel.innerHTML = '';
-            
             const sectionAngle = 360 / rouletteNumbers.length;
             
             rouletteNumbers.forEach((num, index) => {
-                const section = document.createElement('div');
-                section.className = 'wheel-section';
-                section.textContent = num;
-                section.style.transform = `rotateZ(${index * sectionAngle}deg) rotateX(60deg)`;
-                section.style.height = `${100 + (index % 2) * 20}px`;
-                section.style.backgroundColor = colors[index] === 'red' ? '#e74c3c' : 
-                                              colors[index] === 'black' ? '#2c3e50' : '#27ae60';
-                wheel.appendChild(section);
+                const numberElement = document.createElement('div');
+                numberElement.className = 'wheel-number';
+                numberElement.style.transform = `rotate(${index * sectionAngle}deg)`;
+                
+                const numberSpan = document.createElement('span');
+                numberSpan.textContent = num;
+                numberSpan.style.backgroundColor = colors[index] === 'red' ? '#e74c3c' : 
+                                               colors[index] === 'black' ? '#1a1a1a' : '#005e00';
+                numberSpan.style.color = colors[index] === 'green' ? 'white' : 'white';
+                
+                numberElement.appendChild(numberSpan);
+                wheel.appendChild(numberElement);
             });
         }
 
@@ -278,6 +317,7 @@
             updateCoins();
             
             const wheel = document.getElementById('rouletteWheel');
+            const ball = document.getElementById('ball');
             const resultDiv = document.getElementById('result');
             const spinBtn = document.getElementById('spinBtn');
             
@@ -295,7 +335,17 @@
             const targetAngle = 360 * rotations + (360 / rouletteNumbers.length) * randomIndex;
             
             wheel.style.transition = `transform ${spinDuration}ms cubic-bezier(0.17, 0.67, 0.21, 0.99)`;
-            wheel.style.transform = `rotateX(${rotations * 360}deg) rotateZ(${targetAngle}deg)`;
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            
+            // Анимация шарика
+            setTimeout(() => {
+                const ballAngle = (360 - (targetAngle % 360)) % 360;
+                const ballRadius = 120;
+                const ballX = Math.sin(ballAngle * Math.PI / 180) * ballRadius;
+                const ballY = -Math.cos(ballAngle * Math.PI / 180) * ballRadius;
+                
+                ball.style.transform = `translate(calc(-50% + ${ballX}px), calc(-50% + ${ballY}px))`;
+            }, spinDuration * 0.7);
             
             // Результат после завершения анимации
             setTimeout(() => {
@@ -319,7 +369,8 @@
                 // Сброс анимации
                 setTimeout(() => {
                     wheel.style.transition = 'none';
-                    wheel.style.transform = 'rotateX(0) rotateZ(0)';
+                    wheel.style.transform = 'rotate(0)';
+                    ball.style.transform = 'translate(-50%, -50%)';
                     setTimeout(() => {
                         isSpinning = false;
                         spinBtn.disabled = false;
