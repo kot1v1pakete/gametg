@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Casino Roulette | Telegram</title>
+    <title>Premium 3D Roulette</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -190,9 +190,7 @@
             </div>
         </div>
         
-        <div id="roulette-3d-container">
-            <!-- Three.js будет рендерить сюда -->
-        </div>
+        <div id="roulette-3d-container"></div>
         
         <div class="bet-controls">
             <div class="bet-btn" onclick="changeBet(-100)">-100</div>
@@ -218,12 +216,10 @@
 
     <audio id="spinSound" src="1.mp3" preload="auto"></audio>
 
-    <!-- Three.js библиотека -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/geometries/TextGeometry.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/fonts/helvetiker_regular.typeface.json"></script>
 
     <script>
         // Глобальные переменные
@@ -252,7 +248,7 @@
         ];
         
         // Three.js переменные
-        let scene, camera, renderer, wheel, ball, mixer, clock;
+        let scene, camera, renderer, wheel, ball, clock;
         let wheelRotation = 0;
         let targetRotation = 0;
         let isWheelSpinning = false;
@@ -267,32 +263,34 @@
             
             // Сцена
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a2a3a);
+            scene.background = new THREE.Color(0x0d1520);
+            scene.fog = new THREE.Fog(0x0d1520, 50, 150);
             
-            // Камера - вид сверху
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 100, 0);
+            // Камера с видом сверху под углом
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 80, 30);
             camera.lookAt(0, 0, 0);
-            camera.up.set(0, 0, 1);
             
             // Рендерер
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(renderer.domElement);
             
             // Освещение
-            const ambientLight = new THREE.AmbientLight(0x404040);
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
             scene.add(ambientLight);
             
-            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight1.position.set(1, 1, 1);
-            scene.add(directionalLight1);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(10, 50, 20);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
             
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.5);
-            directionalLight2.position.set(-1, -1, -1);
-            scene.add(directionalLight2);
+            const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.5);
+            scene.add(hemisphereLight);
             
-            // Создаем 3D рулетку
+            // Создаем рулетку
             createRouletteWheel();
             
             // Часы для анимации
@@ -307,62 +305,72 @@
         
         function createRouletteWheel() {
             const wheelGroup = new THREE.Group();
-            
-            // Физический наклон колеса (но камера сверху компенсирует)
-            wheelGroup.rotation.x = Math.PI / 3;
+            wheelGroup.rotation.x = Math.PI / 4; // Наклон 45 градусов
             
             // Основание колеса
-            const wheelGeometry = new THREE.CylinderGeometry(50, 50, 10, 36, 1, true);
-            const wheelMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0xd9a441,
-                side: THREE.DoubleSide,
-                shininess: 30
+            const wheelGeometry = new THREE.CylinderGeometry(50, 50, 8, 64);
+            const wheelMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                roughness: 0.7,
+                metalness: 0.2
             });
             const wheelBase = new THREE.Mesh(wheelGeometry, wheelMaterial);
             wheelBase.rotation.x = Math.PI / 2;
+            wheelBase.receiveShadow = true;
             wheelGroup.add(wheelBase);
             
-            // Внутренняя часть колеса
-            const innerGeometry = new THREE.CylinderGeometry(45, 45, 12, 36);
-            const innerMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0x005e00,
-                side: THREE.DoubleSide
+            // Внутренний желоб
+            const innerGeometry = new THREE.CylinderGeometry(45, 45, 10, 64);
+            const innerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x333333,
+                roughness: 0.4,
+                metalness: 0.7
             });
             const innerWheel = new THREE.Mesh(innerGeometry, innerMaterial);
             innerWheel.rotation.x = Math.PI / 2;
             innerWheel.position.z = 1;
+            innerWheel.receiveShadow = true;
             wheelGroup.add(innerWheel);
             
             // Сектора с числами
             const sectorAngle = (2 * Math.PI) / rouletteNumbers.length;
-            const numberGeometry = new THREE.BoxGeometry(5, 2, 10);
+            const sectorGeometry = new THREE.BoxGeometry(4, 2, 10);
             
             rouletteNumbers.forEach((num, index) => {
-                const color = colors[index] === 'red' ? 0xe74c3c : 
-                             colors[index] === 'black' ? 0x1a1a1a : 0x005e00;
+                const color = colors[index] === 'red' ? 0xE74C3C : 
+                             colors[index] === 'black' ? 0x2C3E50 : 0x27AE60;
                 
-                const sectorMaterial = new THREE.MeshPhongMaterial({ color });
-                const sector = new THREE.Mesh(numberGeometry, sectorMaterial);
+                const sectorMaterial = new THREE.MeshStandardMaterial({ 
+                    color,
+                    roughness: 0.5,
+                    metalness: 0.3
+                });
                 
+                const sector = new THREE.Mesh(sectorGeometry, sectorMaterial);
                 const angle = index * sectorAngle;
+                
                 sector.position.set(
-                    Math.sin(angle) * 40,
-                    Math.cos(angle) * 40,
+                    Math.sin(angle) * 42,
+                    Math.cos(angle) * 42,
                     6
                 );
                 sector.rotation.z = -angle;
+                sector.castShadow = true;
                 
                 // Текст
                 const loader = new THREE.FontLoader();
                 loader.load('https://cdn.jsdelivr.net/npm/three@0.132.2/examples/fonts/helvetiker_regular.typeface.json', function(font) {
                     const textGeometry = new THREE.TextGeometry(num.toString(), {
                         font: font,
-                        size: 3,
-                        height: 0.5,
+                        size: 2.5,
+                        height: 0.2
                     });
-                    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                    const textMaterial = new THREE.MeshStandardMaterial({ 
+                        color: 0xFFFFFF,
+                        metalness: 0.8
+                    });
                     const text = new THREE.Mesh(textGeometry, textMaterial);
-                    text.position.set(0, -1, 5);
+                    text.position.set(0, -1.2, 5);
                     text.rotation.x = Math.PI / 2;
                     sector.add(text);
                 });
@@ -371,33 +379,54 @@
             });
             
             // Центральная часть
-            const centerGeometry = new THREE.CylinderGeometry(10, 10, 15, 32);
-            const centerMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0xf5f5f5,
-                shininess: 100
+            const centerGeometry = new THREE.CylinderGeometry(12, 12, 2, 32);
+            const centerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xF5F5F5,
+                roughness: 0.1,
+                metalness: 0.9
             });
             const center = new THREE.Mesh(centerGeometry, centerMaterial);
             center.rotation.x = Math.PI / 2;
             center.position.z = 8;
+            center.castShadow = true;
             wheelGroup.add(center);
             
             // Шарик
-            const ballGeometry = new THREE.SphereGeometry(3, 32, 32);
-            const ballMaterial = new THREE.MeshPhongMaterial({ 
-                color: 0xffffff,
-                shininess: 100
+            const ballGeometry = new THREE.SphereGeometry(3.5, 64, 64);
+            const ballMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xFFFFFF,
+                roughness: 0.1,
+                metalness: 0.9
             });
             ball = new THREE.Mesh(ballGeometry, ballMaterial);
-            ball.position.set(0, -40, 10);
+            ball.position.set(0, -42, 10);
+            ball.castShadow = true;
             wheelGroup.add(ball);
             
             // Указатель
-            const pointerGeometry = new THREE.ConeGeometry(5, 15, 32);
-            const pointerMaterial = new THREE.MeshPhongMaterial({ color: 0xe74c3c });
+            const pointerGeometry = new THREE.ConeGeometry(4, 12, 32);
+            const pointerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xE74C3C,
+                roughness: 0.5
+            });
             const pointer = new THREE.Mesh(pointerGeometry, pointerMaterial);
-            pointer.position.set(0, -60, 15);
+            pointer.position.set(0, -55, 15);
             pointer.rotation.z = Math.PI;
+            pointer.castShadow = true;
             wheelGroup.add(pointer);
+            
+            // Поверхность стола
+            const tableGeometry = new THREE.CircleGeometry(100, 32);
+            const tableMaterial = new THREE.MeshStandardMaterial({
+                color: 0x2C3E50,
+                roughness: 0.8,
+                side: THREE.DoubleSide
+            });
+            const table = new THREE.Mesh(tableGeometry, tableMaterial);
+            table.rotation.x = -Math.PI / 2;
+            table.position.z = -5;
+            table.receiveShadow = true;
+            scene.add(table);
             
             scene.add(wheelGroup);
             wheel = wheelGroup;
@@ -414,25 +443,37 @@
             requestAnimationFrame(animate);
             
             const delta = clock.getDelta();
+            const elapsed = clock.getElapsedTime();
+            
+            // Анимация указателя
+            if (scene.children[1].children[6]) {
+                scene.children[1].children[6].rotation.z = Math.sin(elapsed * 3) * 0.1;
+            }
             
             if (isWheelSpinning) {
-                const elapsed = clock.getElapsedTime() - spinStartTime;
-                const progress = Math.min(elapsed / spinDuration, 1);
+                const spinTime = elapsed - spinStartTime;
+                const progress = Math.min(spinTime / spinDuration, 1);
                 
                 // Кривая замедления
-                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const easeOut = 1 - Math.pow(1 - progress, 4);
                 
                 // Вращение колеса
                 wheel.rotation.z = easeOut * targetRotation;
                 
-                // Позиция шарика
+                // Движение шарика
                 const ballAngle = wheel.rotation.z + Math.PI;
-                const ballRadius = 40;
-                const ballHeight = 5 + Math.sin(elapsed * 10) * 2;
+                const ballRadius = 42;
+                const ballHeight = 10 + Math.sin(elapsed * 8) * 2;
                 
                 ball.position.x = Math.sin(ballAngle) * ballRadius;
                 ball.position.y = Math.cos(ballAngle) * ballRadius;
-                ball.position.z = ballHeight + Math.sin(elapsed * 20) * 1;
+                ball.position.z = ballHeight;
+                
+                // Замедление шарика в конце
+                if (progress > 0.8) {
+                    const slowFactor = (1 - progress) * 5;
+                    ball.position.z = 10 + Math.sin(elapsed * slowFactor) * 2;
+                }
                 
                 if (progress >= 1) {
                     finishSpin();
@@ -442,19 +483,16 @@
             renderer.render(scene, camera);
         }
         
-        // Установка ставки
         function setBet(amount) {
             currentBet = Math.min(amount, coins);
             document.getElementById('betAmount').value = currentBet;
         }
 
-        // Изменение ставки
         function changeBet(amount) {
             currentBet = Math.max(10, Math.min(1000, currentBet + amount));
             document.getElementById('betAmount').value = currentBet;
         }
 
-        // Вращение рулетки
         function spinRoulette() {
             if (isSpinning || coins < currentBet) return;
             
@@ -475,21 +513,20 @@
             winningNumber = rouletteNumbers[randomIndex];
             winningColor = colors[randomIndex];
             
-            // Случайная продолжительность вращения (5-13 секунд)
+            // Длительность вращения 5-13 секунд
             spinDuration = 5 + Math.random() * 8;
             spinStartTime = clock.getElapsedTime();
             
-            // Конечный угол поворота (3-8 оборотов + выигрышный сектор)
+            // Конечный угол поворота
             const rotations = 3 + Math.random() * 5;
             const sectorAngle = (2 * Math.PI) / rouletteNumbers.length;
             targetRotation = rotations * Math.PI * 2 + randomIndex * sectorAngle;
             
-            // Запускаем звук вращения
+            // Звук вращения
             spinSound.currentTime = 0;
             spinSound.play();
         }
 
-        // Завершение вращения
         function finishSpin() {
             isWheelSpinning = false;
             isSpinning = false;
@@ -497,7 +534,7 @@
             const spinSound = document.getElementById('spinSound');
             spinSound.pause();
             
-            // Определение выигрыша
+            // Расчет выигрыша
             let winAmount = 0;
             
             if (winningNumber === 0) {
@@ -519,17 +556,13 @@
             document.getElementById('spinBtn').disabled = false;
         }
 
-        // Обновление количества монет
         function updateCoins() {
             document.getElementById('coinAmount').textContent = coins;
         }
 
-        // Основная функция инициализации
         async function initApp() {
-            // Инициализация 3D сцены
             init3DScene();
             
-            // Пробуем получить данные из Telegram WebApp
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 tg.expand();
@@ -551,7 +584,6 @@
                 }
             }
 
-            // Пробуем получить данные из URL параметров
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('tg_user')) {
                 try {
@@ -567,17 +599,13 @@
                 }
             }
 
-            // Режим по умолчанию
             updateUI(userData);
         }
 
-        // Обновление интерфейса
         async function updateUI(data) {
-            // Обновление текстовой информации
             document.getElementById('playerName').textContent = 
                 data.first_name + (data.last_name ? ' ' + data.last_name : '');
             
-            // Загрузка аватарки
             const avatarImage = document.getElementById('avatarImage');
             const avatarVideo = document.getElementById('avatarVideo');
             const placeholder = document.querySelector('.avatar-placeholder');
@@ -603,7 +631,6 @@
                 placeholder.style.display = 'flex';
             }
             
-            // Обновление монет
             updateCoins();
         }
 
@@ -615,7 +642,6 @@
             }
         }
 
-        // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
