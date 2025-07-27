@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino Roulette | Telegram</title>
+    <title>3D Casino Roulette | Telegram</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -15,6 +15,7 @@
             justify-content: center;
             align-items: center;
             color: white;
+            overflow: hidden;
         }
         #game {
             width: 95%;
@@ -25,7 +26,6 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             position: relative;
-            overflow: hidden;
         }
         .header {
             display: flex;
@@ -84,15 +84,13 @@
             width: 100%;
             height: 300px;
             margin: 20px 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             perspective: 1000px;
         }
-        .roulette-wheel {
+        .wheel-3d {
             width: 280px;
             height: 280px;
             position: relative;
+            margin: 0 auto;
             transform-style: preserve-3d;
             transition: transform 0.1s linear;
         }
@@ -102,7 +100,8 @@
             height: 100%;
             border-radius: 50%;
             background: #d9a441;
-            box-shadow: inset 0 0 0 10px #1a1a1a, 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 0 10px #1a1a1a;
+            transform-style: preserve-3d;
         }
         .wheel-inner {
             position: absolute;
@@ -113,6 +112,7 @@
             border-radius: 50%;
             background: #005e00;
             transform-style: preserve-3d;
+            overflow: hidden;
         }
         .wheel-center {
             position: absolute;
@@ -128,10 +128,10 @@
         }
         .wheel-number {
             position: absolute;
-            width: 0;
-            height: 0;
-            left: 50%;
-            top: 0;
+            width: 40px;
+            height: 24px;
+            left: -20px;
+            top: 10px;
             transform-origin: 50% 140px;
             text-align: center;
             font-weight: bold;
@@ -139,16 +139,9 @@
             color: white;
             line-height: 24px;
             z-index: 2;
-        }
-        .wheel-number span {
-            position: absolute;
-            width: 40px;
-            height: 24px;
-            left: -20px;
-            top: 10px;
             transform: rotate(90deg);
         }
-        .ball {
+        .ball-3d {
             position: absolute;
             width: 16px;
             height: 16px;
@@ -159,6 +152,7 @@
             transform: translate(-50%, -50%);
             z-index: 10;
             box-shadow: 0 0 10px rgba(255,255,255,0.8);
+            transform-style: preserve-3d;
         }
         .wheel-pointer {
             position: absolute;
@@ -273,14 +267,14 @@
         </div>
         
         <div class="roulette-container">
-            <div class="roulette-wheel" id="rouletteWheel">
+            <div class="wheel-3d" id="rouletteWheel">
                 <div class="wheel-outer"></div>
                 <div class="wheel-inner" id="wheelInner">
                     <div class="wheel-center"></div>
                 </div>
                 <div class="wheel-pointer"></div>
             </div>
-            <div class="ball" id="ball"></div>
+            <div class="ball-3d" id="ball"></div>
         </div>
         
         <div class="bet-controls">
@@ -337,8 +331,13 @@
         let spinDuration = 0;
         let winningNumber = 0;
         let winningColor = '';
+        let ballPosition = { x: 0, y: 0, z: 0 };
+        let ballVelocity = { x: 0, y: 0, z: 0 };
+        const ballRadius = 8;
+        const wheelRadius = 120;
+        const wheelDepth = 20;
 
-        // Инициализация рулетки
+        // Инициализация 3D рулетки
         function initRoulette() {
             const wheelInner = document.getElementById('wheelInner');
             const sectionAngle = 360 / rouletteNumbers.length;
@@ -346,15 +345,11 @@
             rouletteNumbers.forEach((num, index) => {
                 const numberElement = document.createElement('div');
                 numberElement.className = 'wheel-number';
-                numberElement.style.transform = `rotate(${index * sectionAngle}deg)`;
+                numberElement.textContent = num;
+                numberElement.style.backgroundColor = colors[index] === 'red' ? '#e74c3c' : 
+                                                    colors[index] === 'black' ? '#1a1a1a' : '#005e00';
+                numberElement.style.transform = `rotate(${index * sectionAngle}deg) translateY(-120px) rotate(90deg)`;
                 
-                const numberSpan = document.createElement('span');
-                numberSpan.textContent = num;
-                numberSpan.style.backgroundColor = colors[index] === 'red' ? '#e74c3c' : 
-                                               colors[index] === 'black' ? '#1a1a1a' : '#005e00';
-                numberSpan.style.color = 'white';
-                
-                numberElement.appendChild(numberSpan);
                 wheelInner.appendChild(numberElement);
             });
         }
@@ -379,8 +374,6 @@
             coins -= currentBet;
             updateCoins();
             
-            const wheel = document.getElementById('rouletteWheel');
-            const ball = document.getElementById('ball');
             const resultDiv = document.getElementById('result');
             const spinBtn = document.getElementById('spinBtn');
             const spinSound = document.getElementById('spinSound');
@@ -397,43 +390,80 @@
             spinDuration = 5000 + Math.random() * 8000;
             spinStartTime = performance.now();
             
+            // Начальная позиция шарика
+            ballPosition = { 
+                x: 0, 
+                y: -wheelRadius + ballRadius, 
+                z: 0 
+            };
+            
+            // Начальная скорость шарика
+            const initialSpeed = 0.5 + Math.random() * 0.5;
+            ballVelocity = { 
+                x: initialSpeed * (Math.random() > 0.5 ? 1 : -1),
+                y: 0,
+                z: 0
+            };
+            
             // Запускаем звук вращения
             spinSound.currentTime = 0;
             spinSound.play();
             
             // Запускаем анимацию
-            ballAnimationId = requestAnimationFrame(animateBall);
+            ballAnimationId = requestAnimationFrame(animateBall3D);
         }
 
-        // Анимация шарика
-        function animateBall(timestamp) {
+        // 3D анимация шарика с физикой
+        function animateBall3D(timestamp) {
             if (!spinStartTime) spinStartTime = timestamp;
             const elapsed = timestamp - spinStartTime;
             const progress = Math.min(elapsed / spinDuration, 1);
             
-            // Кривая замедления
-            const easeOut = 1 - Math.pow(1 - progress, 3);
-            
             // Угол поворота колеса (3-8 полных оборотов + выигрышный сектор)
             const rotations = 3 + Math.random() * 5;
             const targetAngle = 360 * rotations + (360 / rouletteNumbers.length) * rouletteNumbers.indexOf(winningNumber);
-            const currentAngle = easeOut * targetAngle;
-            
-            // Положение шарика
-            const ballRadius = 120;
-            const ballOrbitRadius = 130;
-            const ballAngle = currentAngle * Math.PI / 180;
-            const ballX = Math.sin(ballAngle) * ballOrbitRadius;
-            const ballY = -Math.cos(ballAngle) * ballOrbitRadius;
+            const currentAngle = progress * targetAngle;
             
             // Вращение колеса
             document.getElementById('rouletteWheel').style.transform = `rotateX(60deg) rotateZ(${currentAngle}deg)`;
             
-            // Позиция шарика
-            document.getElementById('ball').style.transform = `translate(calc(-50% + ${ballX}px), calc(-50% + ${ballY}px))`;
+            // Физика шарика
+            if (progress < 0.95) {
+                // Движение шарика по желобу
+                const friction = 0.995;
+                const gravity = 0.2;
+                
+                // Обновляем скорость с учетом трения и гравитации
+                ballVelocity.x *= friction;
+                ballVelocity.y = Math.sin(currentAngle * Math.PI / 180) * gravity;
+                ballVelocity.z = -Math.cos(currentAngle * Math.PI / 180) * gravity;
+                
+                // Обновляем позицию шарика
+                ballPosition.x += ballVelocity.x;
+                ballPosition.y += ballVelocity.y;
+                ballPosition.z += ballVelocity.z;
+                
+                // Ограничиваем позицию шарика в пределах колеса
+                const distanceFromCenter = Math.sqrt(ballPosition.y*ballPosition.y + ballPosition.z*ballPosition.z);
+                if (distanceFromCenter > wheelRadius - ballRadius) {
+                    const angle = Math.atan2(ballPosition.z, ballPosition.y);
+                    ballPosition.y = Math.cos(angle) * (wheelRadius - ballRadius);
+                    ballPosition.z = Math.sin(angle) * (wheelRadius - ballRadius);
+                }
+            } else {
+                // Финализация позиции шарика
+                const winningAngle = (360 - (targetAngle % 360)) * Math.PI / 180;
+                ballPosition.y = Math.cos(winningAngle) * (wheelRadius - ballRadius);
+                ballPosition.z = Math.sin(winningAngle) * (wheelRadius - ballRadius);
+                ballPosition.x = 0;
+            }
+            
+            // Позиция шарика в 3D пространстве
+            const ball = document.getElementById('ball');
+            ball.style.transform = `translate3d(calc(-50% + ${ballPosition.x}px), calc(-50% + ${ballPosition.y}px), ${ballPosition.z}px)`;
             
             if (progress < 1) {
-                ballAnimationId = requestAnimationFrame(animateBall);
+                ballAnimationId = requestAnimationFrame(animateBall3D);
             } else {
                 // Завершение анимации
                 finishSpin();
