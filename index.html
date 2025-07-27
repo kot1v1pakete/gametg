@@ -1,254 +1,497 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Premium 3D Roulette</title>
+    <title>Luxury 3D Roulette</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a2a3a, #0d1520);
+        :root {
+            --primary-color: #e8c547;
+            --secondary-color: #30323d;
+            --dark-color: #1a1a2e;
+            --red-color: #e63946;
+            --black-color: #2b2d42;
+            --green-color: #2a9d8f;
+            --light-color: #f8f9fa;
+        }
+        
+        * {
             margin: 0;
             padding: 0;
-            height: 100vh;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Montserrat', 'Arial', sans-serif;
+            background: radial-gradient(circle at center, #1a1a2e, #16213e);
+            color: var(--light-color);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
             overflow: hidden;
         }
-        #game {
-            width: 95%;
-            max-width: 500px;
-            margin: 0 auto;
-            background: rgba(30, 40, 50, 0.9);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        
+        #app {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
             position: relative;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            background: rgba(48, 50, 61, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
+        
         .player-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
-        .avatar-container {
-            width: 40px;
-            height: 40px;
+        
+        .avatar {
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
+            background: var(--secondary-color);
             overflow: hidden;
-            background: #2c3e50;
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 2px solid var(--primary-color);
         }
-        .avatar-media {
+        
+        .avatar img, .avatar video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+        
         .avatar-placeholder {
-            font-size: 18px;
-            color: #7f8c8d;
+            font-size: 20px;
+            color: var(--primary-color);
         }
+        
         .player-name {
-            font-weight: bold;
+            font-weight: 600;
             font-size: 16px;
         }
-        .coins {
+        
+        .balance {
             display: flex;
             align-items: center;
-            gap: 5px;
-            background: rgba(241, 196, 15, 0.2);
-            padding: 5px 10px;
+            gap: 8px;
+            background: rgba(232, 197, 71, 0.15);
+            padding: 8px 15px;
             border-radius: 20px;
+            font-weight: 600;
         }
+        
+        .balance-amount {
+            color: var(--primary-color);
+        }
+        
         .coin-icon {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
         }
-        .coin-amount {
-            font-weight: bold;
-            color: #f1c40f;
-        }
-        #roulette-3d-container {
-            width: 100%;
-            height: 300px;
+        
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
             position: relative;
-            margin: 20px 0;
         }
+        
+        #roulette-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
         canvas {
-            display: block;
             width: 100%;
             height: 100%;
+            display: block;
         }
+        
         .controls {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
-        button {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-        }
-        button:disabled {
-            background: #7f8c8d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        .bet-input {
-            background: rgba(255,255,255,0.1);
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
-            font-size: 16px;
-            width: 100px;
-            text-align: center;
-            margin: 0 10px;
-        }
+        
         .bet-controls {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            margin: 20px 0;
+            gap: 10px;
         }
-        .bet-btn {
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            cursor: pointer;
+        
+        .bet-amount {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .result {
-            margin-top: 20px;
-            font-size: 18px;
+        
+        .bet-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
             text-align: center;
-            min-height: 24px;
-            color: #f1c40f;
+            outline: none;
         }
+        
+        .bet-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .bet-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
         .chips {
             display: flex;
             justify-content: center;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 5px;
         }
+        
         .chip {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
+        
+        .chip:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+        
+        .chip::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .chip:hover::after {
+            opacity: 1;
+        }
+        
         .chip-10 { background: #3498db; }
+        .chip-25 { background: #9b59b6; }
         .chip-50 { background: #e74c3c; }
         .chip-100 { background: #2ecc71; }
         .chip-500 { background: #f39c12; }
-        .chip-1000 { background: #9b59b6; }
+        
+        .action-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-spin {
+            background: linear-gradient(135deg, var(--primary-color), #f4a261);
+            color: var(--dark-color);
+            box-shadow: 0 4px 15px rgba(232, 197, 71, 0.4);
+        }
+        
+        .btn-spin:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(232, 197, 71, 0.6);
+        }
+        
+        .btn-spin:disabled {
+            background: #7f8c8d;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        
+        .btn-exit {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light-color);
+        }
+        
+        .btn-exit:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            min-height: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+        }
+        
+        .win {
+            background: rgba(42, 157, 143, 0.2);
+            color: #2a9d8f;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .lose {
+            background: rgba(230, 57, 70, 0.2);
+            color: #e63946;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(42, 157, 143, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(42, 157, 143, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(42, 157, 143, 0); }
+        }
+        
+        .wheel-pointer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 40px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .wheel-pointer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid var(--red-color);
+            filter: drop-shadow(0 0 5px rgba(230, 57, 70, 0.7));
+        }
+        
+        .wheel-pointer::after {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 15px;
+            background: var(--red-color);
+        }
+        
+        .history {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .history-item {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .history-green { background: var(--green-color); }
+        .history-red { background: var(--red-color); }
+        .history-black { background: var(--black-color); }
+        
+        @media (max-width: 768px) {
+            #app {
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .chips {
+                gap: 8px;
+            }
+            
+            .chip {
+                width: 45px;
+                height: 45px;
+                font-size: 14px;
+            }
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game">
+    <div id="app">
         <div class="header">
             <div class="player-info">
-                <div class="avatar-container">
+                <div class="avatar">
                     <div class="avatar-placeholder">👤</div>
-                    <img class="avatar-media" id="avatarImage">
-                    <video class="avatar-media" id="avatarVideo" autoplay loop muted playsinline></video>
+                    <img id="avatarImage" style="display: none;">
+                    <video id="avatarVideo" autoplay loop muted playsinline style="display: none;"></video>
                 </div>
                 <span class="player-name" id="playerName">Гость</span>
             </div>
-            <div class="coins">
+            <div class="balance">
                 <img src="https://cdn-icons-png.flaticon.com/512/3132/3132693.png" class="coin-icon">
-                <span class="coin-amount" id="coinAmount">1000</span>
+                <span class="balance-amount" id="balanceAmount">10,000</span>
             </div>
         </div>
         
-        <div id="roulette-3d-container"></div>
-        
-        <div class="bet-controls">
-            <div class="bet-btn" onclick="changeBet(-100)">-100</div>
-            <input type="number" class="bet-input" id="betAmount" value="100" min="10" max="1000">
-            <div class="bet-btn" onclick="changeBet(100)">+100</div>
+        <div class="game-container">
+            <div id="roulette-container">
+                <div class="wheel-pointer"></div>
+                <canvas id="rouletteCanvas"></canvas>
+            </div>
+            
+            <div class="controls">
+                <div class="bet-controls">
+                    <div class="bet-btn" onclick="changeBet(-100)">-</div>
+                    <div class="bet-amount">
+                        <input type="number" class="bet-input" id="betInput" value="100" min="10" max="5000">
+                    </div>
+                    <div class="bet-btn" onclick="changeBet(100)">+</div>
+                </div>
+                
+                <div class="chips">
+                    <div class="chip chip-10" onclick="setBet(10)">10</div>
+                    <div class="chip chip-25" onclick="setBet(25)">25</div>
+                    <div class="chip chip-50" onclick="setBet(50)">50</div>
+                    <div class="chip chip-100" onclick="setBet(100)">100</div>
+                    <div class="chip chip-500" onclick="setBet(500)">500</div>
+                </div>
+                
+                <div class="action-btns">
+                    <button class="btn btn-spin" id="spinBtn" onclick="startSpin()">
+                        <span>Крутить</span>
+                    </button>
+                    <button class="btn btn-exit" onclick="exitGame()">
+                        <span>Выход</span>
+                    </button>
+                </div>
+                
+                <div class="result" id="result"></div>
+                
+                <div class="history" id="history"></div>
+            </div>
         </div>
-        
-        <div class="chips">
-            <div class="chip chip-10" onclick="setBet(10)">10</div>
-            <div class="chip chip-50" onclick="setBet(50)">50</div>
-            <div class="chip chip-100" onclick="setBet(100)">100</div>
-            <div class="chip chip-500" onclick="setBet(500)">500</div>
-            <div class="chip chip-1000" onclick="setBet(1000)">1K</div>
-        </div>
-        
-        <div class="controls">
-            <button id="spinBtn" onclick="spinRoulette()">Крутить</button>
-            <button class="secondary-btn" onclick="closeApp()">Выход</button>
-        </div>
-        
-        <div class="result" id="result"></div>
     </div>
 
-    <audio id="spinSound" src="1.mp3" preload="auto"></audio>
+    <audio id="spinSound" src="https://assets.mixkit.co/sfx/preview/mixkit-slot-machine-spin-1930.mp3" preload="auto"></audio>
+    <audio id="winSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+    <audio id="loseSound" src="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-lose-2027.mp3" preload="auto"></audio>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/geometries/TextGeometry.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/fonts/helvetiker_regular.typeface.json"></script>
 
     <script>
-        // Глобальные переменные
-        let userData = {
-            id: null,
-            first_name: "Гость",
-            last_name: "",
-            username: "guest",
-            photo_url: "",
-            is_video: false
+        // Game data
+        const gameData = {
+            balance: 10000,
+            bet: 100,
+            minBet: 10,
+            maxBet: 5000,
+            isSpinning: false,
+            history: [],
+            user: {
+                id: null,
+                name: "Гость",
+                avatar: null,
+                isVideo: false
+            },
+            rouletteNumbers: [
+                0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 
+                11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
+            ],
+            rouletteColors: [
+                'green', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
+                'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
+                'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
+                'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
+                'black', 'red', 'black', 'red', 'black'
+            ],
+            payouts: {
+                green: 35,
+                red: 2,
+                black: 2
+            }
         };
-        
-        let coins = 1000;
-        let currentBet = 100;
-        let isSpinning = false;
-        const rouletteNumbers = [
-            0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 
-            11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
-        ];
-        const colors = [
-            'green', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
-            'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
-            'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
-            'black', 'red', 'black', 'red', 'black', 'red', 'black', 'red', 
-            'black', 'red', 'black', 'red', 'black'
-        ];
-        
-        // Three.js переменные
-        let scene, camera, renderer, wheel, ball, clock;
+
+        // 3D Scene variables
+        let scene, camera, renderer, wheel, ball, pointer;
+        let wheelGroup, ballGroup;
         let wheelRotation = 0;
         let targetRotation = 0;
         let isWheelSpinning = false;
@@ -256,70 +499,167 @@
         let spinDuration = 0;
         let winningNumber = 0;
         let winningColor = '';
+        let clock = new THREE.Clock();
+        let font;
 
-        // Инициализация Three.js сцены
+        // DOM Elements
+        const balanceEl = document.getElementById('balanceAmount');
+        const betInputEl = document.getElementById('betInput');
+        const spinBtnEl = document.getElementById('spinBtn');
+        const resultEl = document.getElementById('result');
+        const historyEl = document.getElementById('history');
+        const playerNameEl = document.getElementById('playerName');
+        const avatarImageEl = document.getElementById('avatarImage');
+        const avatarVideoEl = document.getElementById('avatarVideo');
+        const avatarPlaceholderEl = document.querySelector('.avatar-placeholder');
+        const spinSound = document.getElementById('spinSound');
+        const winSound = document.getElementById('winSound');
+        const loseSound = document.getElementById('loseSound');
+
+        // Initialize the game
+        function initGame() {
+            initUserData();
+            initUI();
+            init3DScene();
+            render();
+        }
+
+        // Initialize user data
+        function initUserData() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.expand();
+                
+                if (tg.initDataUnsafe?.user) {
+                    const user = tg.initDataUnsafe.user;
+                    gameData.user = {
+                        id: user.id,
+                        name: [user.first_name, user.last_name].filter(Boolean).join(' '),
+                        avatar: user.photo_url,
+                        isVideo: user.photo_url?.endsWith('.mp4')
+                    };
+                }
+            } else {
+                // For browser testing
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('user')) {
+                    try {
+                        const user = JSON.parse(decodeURIComponent(urlParams.get('user')));
+                        gameData.user = {
+                            id: user.id || Date.now(),
+                            name: user.name || "Тестовый пользователь",
+                            avatar: user.avatar || null,
+                            isVideo: user.isVideo || false
+                        };
+                    } catch (e) {
+                        console.error("Error parsing user data:", e);
+                    }
+                }
+            }
+        }
+
+        // Initialize UI
+        function initUI() {
+            // Set user info
+            playerNameEl.textContent = gameData.user.name;
+            
+            // Set avatar
+            if (gameData.user.avatar) {
+                if (gameData.user.isVideo) {
+                    avatarVideoEl.src = gameData.user.avatar;
+                    avatarVideoEl.style.display = 'block';
+                    avatarPlaceholderEl.style.display = 'none';
+                } else {
+                    avatarImageEl.src = gameData.user.avatar;
+                    avatarImageEl.style.display = 'block';
+                    avatarPlaceholderEl.style.display = 'none';
+                }
+            }
+            
+            // Set balance
+            updateBalance();
+            
+            // Set bet input
+            betInputEl.value = gameData.bet;
+            betInputEl.addEventListener('change', () => {
+                const value = parseInt(betInputEl.value);
+                if (!isNaN(value)) {
+                    gameData.bet = Math.max(gameData.minBet, Math.min(gameData.maxBet, value));
+                    betInputEl.value = gameData.bet;
+                } else {
+                    betInputEl.value = gameData.bet;
+                }
+            });
+        }
+
+        // Initialize 3D scene
         function init3DScene() {
-            const container = document.getElementById('roulette-3d-container');
+            const container = document.getElementById('rouletteCanvas');
             
-            // Сцена
+            // Scene
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0d1520);
-            scene.fog = new THREE.Fog(0x0d1520, 50, 150);
+            scene.background = new THREE.Color(0x16213e);
+            scene.fog = new THREE.Fog(0x16213e, 50, 150);
             
-            // Камера с видом сверху под углом
+            // Camera
             camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 80, 30);
+            camera.position.set(0, 80, 50);
             camera.lookAt(0, 0, 0);
             
-            // Рендерер
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: container,
+                antialias: true,
+                alpha: false
+            });
             renderer.setSize(container.clientWidth, container.clientHeight);
             renderer.shadowMap.enabled = true;
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            container.appendChild(renderer.domElement);
+            renderer.setPixelRatio(window.devicePixelRatio);
             
-            // Освещение
+            // Lighting
             const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
             scene.add(ambientLight);
             
             const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
             directionalLight.position.set(10, 50, 20);
             directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 1024;
+            directionalLight.shadow.mapSize.height = 1024;
             scene.add(directionalLight);
             
             const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.5);
             scene.add(hemisphereLight);
             
-            // Создаем рулетку
+            // Create roulette wheel
             createRouletteWheel();
             
-            // Часы для анимации
-            clock = new THREE.Clock();
+            // Create table
+            createTable();
             
-            // Обработчик изменения размера
+            // Handle window resize
             window.addEventListener('resize', onWindowResize);
-            
-            // Запускаем рендер
-            animate();
         }
-        
+
+        // Create roulette wheel
         function createRouletteWheel() {
-            const wheelGroup = new THREE.Group();
-            wheelGroup.rotation.x = Math.PI / 4; // Наклон 45 градусов
+            wheelGroup = new THREE.Group();
+            wheelGroup.rotation.x = Math.PI / 4; // Tilt the wheel
             
-            // Основание колеса
+            // Wheel base
             const wheelGeometry = new THREE.CylinderGeometry(50, 50, 8, 64);
             const wheelMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x8B4513,
-                roughness: 0.7,
-                metalness: 0.2
+                color: 0x5e3023,
+                roughness: 0.8,
+                metalness: 0.3
             });
             const wheelBase = new THREE.Mesh(wheelGeometry, wheelMaterial);
             wheelBase.rotation.x = Math.PI / 2;
             wheelBase.receiveShadow = true;
+            wheelBase.castShadow = true;
             wheelGroup.add(wheelBase);
             
-            // Внутренний желоб
+            // Inner wheel (track)
             const innerGeometry = new THREE.CylinderGeometry(45, 45, 10, 64);
             const innerMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0x333333,
@@ -330,55 +670,66 @@
             innerWheel.rotation.x = Math.PI / 2;
             innerWheel.position.z = 1;
             innerWheel.receiveShadow = true;
+            innerWheel.castShadow = true;
             wheelGroup.add(innerWheel);
             
-            // Сектора с числами
-            const sectorAngle = (2 * Math.PI) / rouletteNumbers.length;
+            // Wheel pockets (numbers)
+            const sectorAngle = (2 * Math.PI) / gameData.rouletteNumbers.length;
             const sectorGeometry = new THREE.BoxGeometry(4, 2, 10);
             
-            rouletteNumbers.forEach((num, index) => {
-                const color = colors[index] === 'red' ? 0xE74C3C : 
-                             colors[index] === 'black' ? 0x2C3E50 : 0x27AE60;
+            // Load font for numbers
+            const loader = new THREE.FontLoader();
+            loader.load('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_regular.typeface.json', function(loadedFont) {
+                font = loadedFont;
                 
-                const sectorMaterial = new THREE.MeshStandardMaterial({ 
-                    color,
-                    roughness: 0.5,
-                    metalness: 0.3
-                });
-                
-                const sector = new THREE.Mesh(sectorGeometry, sectorMaterial);
-                const angle = index * sectorAngle;
-                
-                sector.position.set(
-                    Math.sin(angle) * 42,
-                    Math.cos(angle) * 42,
-                    6
-                );
-                sector.rotation.z = -angle;
-                sector.castShadow = true;
-                
-                // Текст
-                const loader = new THREE.FontLoader();
-                loader.load('https://cdn.jsdelivr.net/npm/three@0.132.2/examples/fonts/helvetiker_regular.typeface.json', function(font) {
-                    const textGeometry = new THREE.TextGeometry(num.toString(), {
-                        font: font,
-                        size: 2.5,
-                        height: 0.2
+                gameData.rouletteNumbers.forEach((num, index) => {
+                    const color = gameData.rouletteColors[index] === 'red' ? 0xE74C3C : 
+                                 gameData.rouletteColors[index] === 'black' ? 0x2C3E50 : 0x2A9D8F;
+                    
+                    const sectorMaterial = new THREE.MeshStandardMaterial({ 
+                        color,
+                        roughness: 0.5,
+                        metalness: 0.3
                     });
-                    const textMaterial = new THREE.MeshStandardMaterial({ 
-                        color: 0xFFFFFF,
-                        metalness: 0.8
-                    });
-                    const text = new THREE.Mesh(textGeometry, textMaterial);
-                    text.position.set(0, -1.2, 5);
-                    text.rotation.x = Math.PI / 2;
-                    sector.add(text);
+                    
+                    const sector = new THREE.Mesh(sectorGeometry, sectorMaterial);
+                    const angle = index * sectorAngle;
+                    
+                    sector.position.set(
+                        Math.sin(angle) * 42,
+                        Math.cos(angle) * 42,
+                        6
+                    );
+                    sector.rotation.z = -angle;
+                    sector.castShadow = true;
+                    
+                    // Add number text
+                    if (font) {
+                        const textGeometry = new THREE.TextGeometry(num.toString(), {
+                            font: font,
+                            size: 2.5,
+                            height: 0.2,
+                            curveSegments: 12
+                        });
+                        textGeometry.center();
+                        
+                        const textMaterial = new THREE.MeshStandardMaterial({ 
+                            color: 0xFFFFFF,
+                            metalness: 0.8,
+                            roughness: 0.2
+                        });
+                        
+                        const text = new THREE.Mesh(textGeometry, textMaterial);
+                        text.position.set(0, -1.2, 5);
+                        text.rotation.x = Math.PI / 2;
+                        sector.add(text);
+                    }
+                    
+                    wheelGroup.add(sector);
                 });
-                
-                wheelGroup.add(sector);
             });
             
-            // Центральная часть
+            // Center part
             const centerGeometry = new THREE.CylinderGeometry(12, 12, 2, 32);
             const centerMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0xF5F5F5,
@@ -391,34 +742,43 @@
             center.castShadow = true;
             wheelGroup.add(center);
             
-            // Шарик
+            // Ball
+            ballGroup = new THREE.Group();
             const ballGeometry = new THREE.SphereGeometry(3.5, 64, 64);
             const ballMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0xFFFFFF,
                 roughness: 0.1,
-                metalness: 0.9
+                metalness: 0.9,
+                envMapIntensity: 0.5
             });
             ball = new THREE.Mesh(ballGeometry, ballMaterial);
             ball.position.set(0, -42, 10);
             ball.castShadow = true;
-            wheelGroup.add(ball);
+            ballGroup.add(ball);
             
-            // Указатель
-            const pointerGeometry = new THREE.ConeGeometry(4, 12, 32);
-            const pointerMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0xE74C3C,
-                roughness: 0.5
+            // Ball highlight
+            const ballHighlightGeometry = new THREE.SphereGeometry(3.6, 32, 32);
+            const ballHighlightMaterial = new THREE.MeshStandardMaterial({
+                color: 0xFFFFFF,
+                roughness: 0.3,
+                metalness: 1.0,
+                transparent: true,
+                opacity: 0.5
             });
-            const pointer = new THREE.Mesh(pointerGeometry, pointerMaterial);
-            pointer.position.set(0, -55, 15);
-            pointer.rotation.z = Math.PI;
-            pointer.castShadow = true;
-            wheelGroup.add(pointer);
+            const ballHighlight = new THREE.Mesh(ballHighlightGeometry, ballHighlightMaterial);
+            ballHighlight.position.set(1, -1, 1);
+            ball.add(ballHighlight);
             
-            // Поверхность стола
-            const tableGeometry = new THREE.CircleGeometry(100, 32);
+            wheelGroup.add(ballGroup);
+            scene.add(wheelGroup);
+        }
+
+        // Create table
+        function createTable() {
+            // Table surface
+            const tableGeometry = new THREE.CircleGeometry(100, 64);
             const tableMaterial = new THREE.MeshStandardMaterial({
-                color: 0x2C3E50,
+                color: 0x30323D,
                 roughness: 0.8,
                 side: THREE.DoubleSide
             });
@@ -428,51 +788,81 @@
             table.receiveShadow = true;
             scene.add(table);
             
-            scene.add(wheelGroup);
-            wheel = wheelGroup;
+            // Table edge
+            const edgeGeometry = new THREE.TorusGeometry(100, 5, 16, 64);
+            const edgeMaterial = new THREE.MeshStandardMaterial({
+                color: 0x5E3023,
+                roughness: 0.7
+            });
+            const edge = new THREE.Mesh(edgeGeometry, edgeMaterial);
+            edge.rotation.x = Math.PI / 2;
+            edge.position.z = -2.5;
+            edge.receiveShadow = true;
+            scene.add(edge);
+            
+            // Table legs
+            const legGeometry = new THREE.CylinderGeometry(3, 3, 30, 16);
+            const legMaterial = new THREE.MeshStandardMaterial({
+                color: 0x3D2B1F,
+                roughness: 0.8
+            });
+            
+            for (let i = 0; i < 4; i++) {
+                const angle = (i / 4) * Math.PI * 2;
+                const leg = new THREE.Mesh(legGeometry, legMaterial);
+                leg.position.set(
+                    Math.cos(angle) * 90,
+                    Math.sin(angle) * 90,
+                    -20
+                );
+                leg.castShadow = true;
+                scene.add(leg);
+            }
         }
-        
+
+        // Window resize handler
         function onWindowResize() {
-            const container = document.getElementById('roulette-3d-container');
+            const container = document.getElementById('rouletteCanvas');
             camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container.clientWidth, container.clientHeight);
         }
-        
-        function animate() {
-            requestAnimationFrame(animate);
+
+        // Animation loop
+        function render() {
+            requestAnimationFrame(render);
             
             const delta = clock.getDelta();
             const elapsed = clock.getElapsedTime();
             
-            // Анимация указателя
-            if (scene.children[1].children[6]) {
-                scene.children[1].children[6].rotation.z = Math.sin(elapsed * 3) * 0.1;
-            }
-            
+            // Animate wheel spin
             if (isWheelSpinning) {
                 const spinTime = elapsed - spinStartTime;
                 const progress = Math.min(spinTime / spinDuration, 1);
                 
-                // Кривая замедления
+                // Easing function for smooth deceleration
                 const easeOut = 1 - Math.pow(1 - progress, 4);
                 
-                // Вращение колеса
-                wheel.rotation.z = easeOut * targetRotation;
+                // Rotate wheel
+                wheelGroup.rotation.z = easeOut * targetRotation;
                 
-                // Движение шарика
-                const ballAngle = wheel.rotation.z + Math.PI;
+                // Animate ball
+                const ballAngle = wheelGroup.rotation.z + Math.PI;
                 const ballRadius = 42;
-                const ballHeight = 10 + Math.sin(elapsed * 8) * 2;
+                const ballHeight = 10 + Math.sin(elapsed * 10) * 2;
                 
-                ball.position.x = Math.sin(ballAngle) * ballRadius;
-                ball.position.y = Math.cos(ballAngle) * ballRadius;
-                ball.position.z = ballHeight;
+                ballGroup.position.x = Math.sin(ballAngle) * ballRadius;
+                ballGroup.position.y = Math.cos(ballAngle) * ballRadius;
+                ballGroup.position.z = ballHeight;
                 
-                // Замедление шарика в конце
+                // Ball wobble effect
+                ball.rotation.x = elapsed * 3;
+                ball.rotation.y = elapsed * 2;
+                
+                // Slow down ball at the end
                 if (progress > 0.8) {
                     const slowFactor = (1 - progress) * 5;
-                    ball.position.z = 10 + Math.sin(elapsed * slowFactor) * 2;
+                    ballGroup.position.z = 10 + Math.sin(elapsed * slowFactor) * 2;
                 }
                 
                 if (progress >= 1) {
@@ -482,167 +872,129 @@
             
             renderer.render(scene, camera);
         }
-        
-        function setBet(amount) {
-            currentBet = Math.min(amount, coins);
-            document.getElementById('betAmount').value = currentBet;
-        }
 
-        function changeBet(amount) {
-            currentBet = Math.max(10, Math.min(1000, currentBet + amount));
-            document.getElementById('betAmount').value = currentBet;
-        }
-
-        function spinRoulette() {
-            if (isSpinning || coins < currentBet) return;
+        // Start spin
+        function startSpin() {
+            if (gameData.isSpinning || gameData.balance < gameData.bet) return;
             
-            isSpinning = true;
+            gameData.isSpinning = true;
             isWheelSpinning = true;
-            coins -= currentBet;
-            updateCoins();
+            gameData.balance -= gameData.bet;
+            updateBalance();
             
-            const resultDiv = document.getElementById('result');
-            const spinBtn = document.getElementById('spinBtn');
-            const spinSound = document.getElementById('spinSound');
+            spinBtnEl.disabled = true;
+            resultEl.textContent = '';
+            resultEl.className = 'result';
             
-            spinBtn.disabled = true;
-            resultDiv.textContent = '';
+            // Random winning number
+            const randomIndex = Math.floor(Math.random() * gameData.rouletteNumbers.length);
+            winningNumber = gameData.rouletteNumbers[randomIndex];
+            winningColor = gameData.rouletteColors[randomIndex];
             
-            // Случайное число и цвет
-            const randomIndex = Math.floor(Math.random() * rouletteNumbers.length);
-            winningNumber = rouletteNumbers[randomIndex];
-            winningColor = colors[randomIndex];
-            
-            // Длительность вращения 5-13 секунд
-            spinDuration = 5 + Math.random() * 8;
+            // Spin duration 5-10 seconds
+            spinDuration = 5 + Math.random() * 5;
             spinStartTime = clock.getElapsedTime();
             
-            // Конечный угол поворота
+            // Final rotation angle
             const rotations = 3 + Math.random() * 5;
-            const sectorAngle = (2 * Math.PI) / rouletteNumbers.length;
+            const sectorAngle = (2 * Math.PI) / gameData.rouletteNumbers.length;
             targetRotation = rotations * Math.PI * 2 + randomIndex * sectorAngle;
             
-            // Звук вращения
+            // Play spin sound
             spinSound.currentTime = 0;
             spinSound.play();
         }
 
+        // Finish spin
         function finishSpin() {
             isWheelSpinning = false;
-            isSpinning = false;
+            gameData.isSpinning = false;
             
-            const spinSound = document.getElementById('spinSound');
             spinSound.pause();
             
-            // Расчет выигрыша
+            // Calculate winnings
             let winAmount = 0;
             
-            if (winningNumber === 0) {
-                winAmount = currentBet * 35;
-            } else if (winningColor === 'red') {
-                winAmount = currentBet * 2;
-            } else if (winningColor === 'black') {
-                winAmount = currentBet * 2;
+            if (winningColor === 'green') {
+                winAmount = gameData.bet * gameData.payouts.green;
+            } else if (winningColor === 'red' || winningColor === 'black') {
+                winAmount = gameData.bet * gameData.payouts.red;
             }
             
-            coins += winAmount;
-            updateCoins();
+            gameData.balance += winAmount;
+            updateBalance();
             
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = winAmount > 0 
+            // Add to history
+            addToHistory(winningNumber, winningColor);
+            
+            // Show result
+            resultEl.textContent = winAmount > 0 
                 ? `Поздравляем! Вы выиграли ${winAmount} монет (${winningNumber} ${winningColor})`
-                : `Вы проиграли ${currentBet} монет (${winningNumber} ${winningColor})`;
+                : `Вы проиграли ${gameData.bet} монет (${winningNumber} ${winningColor})`;
             
-            document.getElementById('spinBtn').disabled = false;
-        }
-
-        function updateCoins() {
-            document.getElementById('coinAmount').textContent = coins;
-        }
-
-        async function initApp() {
-            init3DScene();
+            resultEl.classList.add(winAmount > 0 ? 'win' : 'lose');
             
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.expand();
-                
-                if (tg.initDataUnsafe?.user) {
-                    userData = {
-                        ...userData,
-                        ...tg.initDataUnsafe.user,
-                        is_video: false
-                    };
-                    
-                    if (tg.initDataUnsafe.user.photo_url) {
-                        userData.photo_url = tg.initDataUnsafe.user.photo_url;
-                        userData.is_video = tg.initDataUnsafe.user.photo_url.endsWith('.mp4');
-                    }
-                    
-                    updateUI(userData);
-                    return;
-                }
-            }
-
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.has('tg_user')) {
-                try {
-                    const data = JSON.parse(decodeURIComponent(urlParams.get('tg_user')));
-                    userData = {
-                        ...userData,
-                        ...data
-                    };
-                    updateUI(userData);
-                    return;
-                } catch (e) {
-                    console.error("Ошибка парсинга данных:", e);
-                }
-            }
-
-            updateUI(userData);
-        }
-
-        async function updateUI(data) {
-            document.getElementById('playerName').textContent = 
-                data.first_name + (data.last_name ? ' ' + data.last_name : '');
-            
-            const avatarImage = document.getElementById('avatarImage');
-            const avatarVideo = document.getElementById('avatarVideo');
-            const placeholder = document.querySelector('.avatar-placeholder');
-            
-            if (data.photo_url) {
-                try {
-                    if (data.is_video) {
-                        avatarVideo.src = data.photo_url;
-                        avatarVideo.style.display = 'block';
-                        placeholder.style.display = 'none';
-                        avatarImage.style.display = 'none';
-                    } else {
-                        avatarImage.src = data.photo_url;
-                        avatarImage.style.display = 'block';
-                        placeholder.style.display = 'none';
-                        avatarVideo.style.display = 'none';
-                    }
-                } catch (e) {
-                    console.error('Ошибка загрузки аватарки:', e);
-                    placeholder.style.display = 'flex';
-                }
+            // Play win/lose sound
+            if (winAmount > 0) {
+                winSound.currentTime = 0;
+                winSound.play();
             } else {
-                placeholder.style.display = 'flex';
+                loseSound.currentTime = 0;
+                loseSound.play();
             }
             
-            updateCoins();
+            spinBtnEl.disabled = false;
         }
 
-        function closeApp() {
+        // Add result to history
+        function addToHistory(number, color) {
+            gameData.history.unshift({ number, color });
+            if (gameData.history.length > 10) {
+                gameData.history.pop();
+            }
+            
+            updateHistory();
+        }
+
+        // Update history display
+        function updateHistory() {
+            historyEl.innerHTML = '';
+            
+            gameData.history.forEach(item => {
+                const historyItem = document.createElement('div');
+                historyItem.className = `history-item history-${item.color}`;
+                historyItem.textContent = item.number;
+                historyEl.appendChild(historyItem);
+            });
+        }
+
+        // Update balance display
+        function updateBalance() {
+            balanceEl.textContent = gameData.balance.toLocaleString();
+        }
+
+        // Set bet amount
+        function setBet(amount) {
+            gameData.bet = Math.max(gameData.minBet, Math.min(gameData.maxBet, amount));
+            betInputEl.value = gameData.bet;
+        }
+
+        // Change bet amount
+        function changeBet(amount) {
+            setBet(gameData.bet + amount);
+        }
+
+        // Exit game
+        function exitGame() {
             if (window.Telegram && window.Telegram.WebApp) {
                 Telegram.WebApp.close();
             } else {
-                alert("Приложение закрыто (в браузере)");
+                alert("Игра завершена");
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initApp);
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
